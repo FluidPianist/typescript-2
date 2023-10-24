@@ -1,0 +1,25 @@
+{
+  "name": "typescript-2",
+  "version": "1.0.0",
+  "description": "part 2 of ts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FluidPianist/typescript-2.git"
+  },
+  "author": "Adeeb",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FluidPianist/typescript-2/issues"
+  },
+  "homepage": "https://github.com/FluidPianist/typescript-2#readme",
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.5.25"
+  }
+}

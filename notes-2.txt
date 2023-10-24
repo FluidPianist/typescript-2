@@ -1,0 +1,56 @@
+This is the second part of the typescript course,
+First course is a pre requisite
+
+its better to typescript locally so that you can use different in each
+project
+once you have downloaded it , you can check it using npx tsc -v
+
+before running npx tsc -w , ensure you have tsconfig.json in root folder
+
+*****Chapter one
+
+Part 1
+
+: in tsconfig.json 
+  target = version of js to be used, es5 , es6 etc
+           esnext means = use the latest available version
+  noEmit = do not produce the transpiled js code if set to true
+  outdir = produce the transpiled code , if allowed, to this dire 
+  includes = directory of the source ts files to be converted
+
+Part 2 - adding ts to an already existing Js code
+added app.js
+
+: in tsconfig 
+  allowJs : allow js files to be compiled too
+  checkJs : check js files for type error too
+
+: in app.js
+  +unary operator converts value to a number, so the type of id should 
+  match to number everywhere else
+
+: JSDOC syntax
+  this is an industry standard tool for annotating js language
+  it is just a comment block with special syntax
+  at the top of the js file add /** */ and let vscode autocomplete
+  This will help ts to find errors in existing js file without having
+  to write the entire code in ts
+  It will look something like this : 
+        /**
+        * 
+        * @param {*} contactId //parameter identified from code
+        * @returns 
+        */ 
+   If we replace {*} with number , ts will check if all the params are 
+   of type number and will throw an error if not
+
+Part 3 : importing 3rd party apis
+
+: In app.js we have used jquery syntax which is not recognized by ts
+  and hence it throws an error. solution
+  1. Create a type defination of the api yourself ( dont know how ?)
+  2. Use the type defination made by others if library is open source
+     search @types/jquery in npmjs.com and copy paste the command to 
+     install jsquery's ts defination ( npm install --save @types/jquery)
+
+Challenge : 
