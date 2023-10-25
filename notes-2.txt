@@ -53,4 +53,97 @@ Part 3 : importing 3rd party apis
      search @types/jquery in npmjs.com and copy paste the command to 
      install jsquery's ts defination ( npm install --save @types/jquery)
 
-Challenge : 
+******Chapter 2
+
+Part 1 : about primitve types - covered in Part 1
+
+Part 2 : custom types using interface - covered in Part 1
+
+: interface defines the structure while classes define both the
+  structure and implementation.
+  Interfaces are not reflected in the transpiled js while classes do
+
+: Using interface within each other 
+    interface Address {
+        line1 : string;
+        line2? : string;
+        district : string;
+        state : string;
+        pincode : number;
+        country : string;
+    }
+
+    interface Contact extends Address {
+        id : number;
+        name: string;
+        birthdate? : Date;
+    }
+
+Part 3 : Type Alias 
+
+: type ContactName = string // we can use ContactName instead of String
+  interface Contact extends Address {
+        id : number;
+        name: ContactName; 
+        birthdate? : Date;
+  }
+  // if we want to change the type of all references to ContactName
+     from string to number, we just need to make 1 change only.
+ 
+Part 4 : Enums - covered in part 1
+
+Part 5 : typing functions - covered in Part 1
+
+Part 6 : generics - covered in Part 1
+
+: some complicated examples 
+    interface Contact {
+        id : number;
+        name: ContactName;
+    }
+
+    interface UserContact {
+        id : number;
+        name : ContactName;
+        username : string
+    } //usercontact is an extention of Contact
+
+    let primaryContact : Contact = {
+        id : 1,
+        name : "test User",
+    }
+
+    function clone<T1, T2 extends T1>(source: T1): T2{
+        return Object.apply({},source); //cloning structure of source
+    } // putting a contraint that T2 should be an extention of T1
+
+    const b = clone<Contact, UserContact>(primaryContact)
+    //syntax for calling mutiple type tempelate funtion ^
+    //if Contact had a property missing in UserContact, this function
+    call would throw an error
+    //b will be of type UserContact  
+
+: generics can be applied to classes and interfaces too
+    interface UserContact<T> {
+        id : number
+        name : ContactName
+        username : T
+    }
+    const b = clone<Contact, UserContact<string>>(primaryContact)
+
+Challenge 02 :
+
+: This tempelate function excepts an Array of type T.
+  Since we are using id property of each object in the Array we need
+  to put a constraint on the Type T that it should include 
+  an id property 
+
+    function getNextId<T extends {id : number}>(items : T[]) : number {
+        return items.reduce((max, x) => x.id > max ? x.id : max, 0) + 1
+    }
+
+****Chapter 3
+
+Part 1 
+
+:
