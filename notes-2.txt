@@ -144,6 +144,152 @@ Challenge 02 :
 
 ****Chapter 3
 
-Part 1 
+Part 1 : Union types
+: pipe syntax provides alternative types
+  
+: apersand syntax can provide union types
+  type AddressAndContact = Contact & Address 
+  let newContact : AddressAndContact // will have properties of both 
+  interfaces
 
-:
+Part 2 : keyof operator
+
+: type ContactField = keyof Contact
+  const field: ContactField = "birthdate"
+  //only allowed values for the fieldvariables are the key names
+   of Contact Interface 
+
+: better use of keyof operator
+    function getValue<T>(source : T, propertyname : keyof T){
+        return source[propertyname];
+    }
+    // this will ensure that the property name exists
+
+    console.log(getValue(primaryContact, "birthdate"))
+   
+   If this was plain js, we could have made a typo while writing the
+   name of the property and js would have happily returned undefined
+
+: more powerful generic function
+  function getValue<T, U extends keyof T>(source : T, propertyname : U){
+    return source[propertyname];
+  }
+  //If we need to refer to "typeof T" in the getValue function later on
+    we can do so by U instead of writin typeof T all the time
+
+Part 3 - typeof
+
+: To ensure object being passed is of a specific type before we 
+  do some kind of permanent operation on the object like save lets say 
+  const myType = { min: 1 , max : 200}
+  function save(source : typeof myType){};
+
+
+Part 4 - ensuring references have same types
+
+:    interface ContactEvent {
+        contactPostalCode : Contact["address"]["pincode"]
+    }
+    this will ensure that contactId has the same type as pincode 
+    property of contact["address"] interface
+
+: complex example
+    interface ContactEvent {
+        contactId: Contact["id"];
+    } //referncing Contact Interface for contactID type
+
+    interface ContactDeletedEvent extends ContactEvent { 
+    } //inheriting for deleted event
+
+    interface ContactStatusChangedEvent extends ContactEvent { 
+        oldStatus: ContactStatus;
+        newStatus: ContactStatus;
+    } //inheriting for statuschanged event
+
+    interface ContactEvents {
+        deleted: ContactDeletedEvent;
+        statusChanged: ContactStatusChangedEvent;
+        // ... and so on
+    } //merging both events
+
+    function handleEvent<T extends keyof ContactEvents>(
+        eventName: T, //this will be either deleted or statusChanged
+        handler: (evt: ContactEvents[T]) => void //defining handler function which takes value from ContactEvent["deleted or statusChanged"] depending on the value of T and returns void
+    ) {
+        if (eventName === "statusChanged") { //In case of statusChanged event
+            handler({ contactId: 1, oldStatus: "active", newStatus: "inactive" })
+        } //handler function is called with contactStatusChangedEvent Object
+    }
+
+    handleEvent("statusChanged", evt => console.log(evt))
+    //this call is made which defines what handler function will do
+    i.e console.log() the value of ContactEvent[statusChanged] which is
+    an object of ContactStatusChangedEvent
+    the object is present in the variable evt.
+    ts implicitly determines the type of evt based on the value of T
+    when handler function is called    
+
+Part 5 :
+
+Record keyword
+:   let x = {name : "Wayne"}
+    x.id = 12; //this will work in js but not typescript
+
+:   if we define let x as any then it will work but we are opting 
+    out of ts type safety
+
+:   a good way to have js flexibility & ts type safety would be record
+    
+    let x : Record<string, string | number | boolean | Function> = { name : "Wayne"}
+    x.number = 123;
+    x.active = true;
+    x.log = () => console.log("dynamically added function")
+
+    Record< type of name , type of values allowed >
+    this is useful in scenarios where we dont know all the property
+    of the object at the time of its defination
+
+:   complex Example :
+    we are trying to search contacts based on the given query
+    we have a defined query interface which takes in sort and matches
+    function as property
+    we then define a function Search Contacts,
+    which takes an array of contacts and query
+    the query has property names equal to the contact names only
+    and for each of those properties, value for searching the contacts
+    is provided in the form of matches function.
+    In the function we extract all properties one by one from each
+    contact and run the corresponding matches function defined in the 
+    query to see if it returns true for the current contacts extracted
+    property.
+    Note that query being passed at the bottom should have all the
+    properties defined in contact
+
+    interface Query {
+        sort?: 'asc' | 'desc';
+        matches(val): boolean;
+    }
+
+    function searchContacts(contacts: Contact[], query: Record<keyof Contact,Query>) {
+        return contacts.filter(contact => {
+            for (const property of Object.keys(contact)) {
+                // get the query object for this property
+                const propertyQuery = query[property];
+                // check to see if it matches
+                if (propertyQuery && propertyQuery.matches(contact[property])) {
+                    return true;
+                }
+            }
+
+            return false;
+        })
+    }
+
+    const filteredContacts = searchContacts(
+        [/* contacts */],
+        {
+            id: { matches: (id) => id === 123 },
+            name: { matches: (name) => name === "Carol Weaver" },
+        // phoneNumber: { matches: (name) => name === "Carol Weaver" },
+        }
+    );
