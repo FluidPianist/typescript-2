@@ -262,8 +262,11 @@ Record keyword
     contact and run the corresponding matches function defined in the 
     query to see if it returns true for the current contacts extracted
     property.
+
     Note that query being passed at the bottom should have all the
-    properties defined in contact
+    properties defined in contact interface. I have commented the 
+    props in Contact which are not present in the query record object
+    being passed
 
     interface Query {
         sort?: 'asc' | 'desc';
@@ -293,3 +296,106 @@ Record keyword
         // phoneNumber: { matches: (name) => name === "Carol Weaver" },
         }
     );
+
+**Chapter 4
+
+Part 1
+: In the previous example we had to comment those props in Contact 
+Interface which were not being passed in the query record object.
+
+: To select only a subset of the Contact Interface props as keys
+ for query Record Object we use Partials
+
+    type ContactQuery = Partial<Record<keyof Contact,Query>>
+
+    function searchContacts(contacts: Contact[], query: ContactQuery) {
+        return contacts.filter(contact => {
+            for (const property of Object.keys(contact)) {
+                const propertyQuery = query[property];
+                if (propertyQuery && propertyQuery.matches(contact[property])) {
+                    return true;
+                }
+            }
+            return false;
+        })
+    }
+
+: if we want to exclude a subset of the properties of Contacts from 
+  being queried on we can use :
+
+    type ContactQuery = Omit<
+        Partial<
+            Record<keyof Contact,Query> 
+        >,
+        "address" | "status"
+    > //this will omit address and status
+
+:if we want to include only a few fixed properties of contacts no
+ matter how many other props get added we can use Pick
+
+    type ContactQuery = Pick<
+        Partial<
+            Record<keyof Contact,Query> 
+        >,
+        "id" | "name"
+    > //this will include id and name only
+
+: The Required keyword will make all the props of Contacts as Required
+
+Part 2: 
+: creating interfaces using maps
+    type ContactQuery = {
+        [TProp in keyof Contact]? : query //used for iterating over 
+    } //all the properties one by one.
+    
+: One use of this method is to assign type to the params of the
+  matches function depending on the Contact property to which this 
+  Query interface object(which has the matches function) is being 
+  added to.
+
+    interface Query<Tprop> {
+        sort?: 'asc' | 'desc';
+        matches(val: Tprop): boolean;
+    }
+
+    type ContactQuery = {
+        [TProp in keyof Contact]? : Query<Contact[TProp]>
+    }
+
+    function searchContacts(contacts: Contact[], query: ContactQuery) {
+        return contacts.filter(contact => {
+            for (const property of Object.keys(contact) as (keyof Contact)[]) {
+                const propertyQuery = query[property] as Query<Contact[keyof Contact]>;
+                if (propertyQuery && propertyQuery.matches(contact[property])) {
+                    return true;
+                }
+            }
+            return false;
+        })
+    }   
+    //at line 366 : we have defined the type of property variable
+                    using the as syntax.
+    //at line 367 : we have defined the type of PropertyQuery using 
+                    the as syntax
+    // defining type of all variables helps typescript and reduces
+       the chances of compile time and run time error by being more
+       explicit
+    
+    Now ts will infer the type of parameter in the matches 
+    function correctly depending on the Contact Property name
+    ,the Query Object ( containing the matches function as prop)
+    is attached to. 
+
+    const filteredContacts = searchContacts(
+        [/* contacts */],
+        {
+            id: { matches: (id) => id === 123 },
+            name: { matches: (name) => name === "Carol Weaver" },
+        }
+    );
+
+: Records wont be able to achieve this feat because the assign 
+  the properties as a whole and not one by one as in maps
+
+***Chapter 05
+

@@ -14,10 +14,10 @@ interface Address {
 interface Contact {
     id : number;
     name: ContactName;
-    // birthdate? : ContactBirthDate
-    // status? : ContactStatus
-    // address? : Address
-    //clone(source : Contact) : Contact
+    birthdate? : ContactBirthDate
+    status? : ContactStatus
+    address? : Address
+    // clone(source : Contact) : Contact
 }
 
 type AddressAndContact = Contact & Address
@@ -88,16 +88,27 @@ x.active = true;
 x.log = () => console.log("dynamically added function")
 
 
-interface Query {
+interface Query<Tprop> {
     sort?: 'asc' | 'desc';
-    matches(val): boolean;
+    matches(val: Tprop): boolean;
 }
 
-function searchContacts(contacts: Contact[], query: Record<keyof Contact,Query>) {
+// type ContactQuery = Omit<
+//     Partial<
+//         Record<keyof Contact,Query> 
+//     >,
+//     "address" | "status"
+// >
+
+type ContactQuery = {
+    [TProp in keyof Contact]? : Query<Contact[TProp]>
+}
+
+function searchContacts(contacts: Contact[], query: ContactQuery) {
     return contacts.filter(contact => {
-        for (const property of Object.keys(contact)) {
+        for (const property of Object.keys(contact) as (keyof Contact)[]) {
             // get the query object for this property
-            const propertyQuery = query[property];
+            const propertyQuery = query[property] as Query<Contact[keyof Contact]>;
             // check to see if it matches
             if (propertyQuery && propertyQuery.matches(contact[property])) {
                 return true;
