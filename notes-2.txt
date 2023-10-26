@@ -399,3 +399,219 @@ Part 2:
 
 ***Chapter 05
 
+Part 1 : Decorators
+
+:Decorators is a proposed adddition to js, once the proposal is 
+ finalized its implementation may be different. Regardless ts 
+ encourages to use this
+: to use decorators set  "experimentalDecorators": true
+  in compilerOptions in tsconfig
+
+: In this function
+
+    const currentUser = {
+        id: 1234,
+        roles: ["ContactEditor"],
+        isAuthenticated(): boolean {
+            return true
+        },
+        isInRole(role: string): boolean {
+            return this.roles.contains(role);
+        }
+    }   
+
+    class ContactRepository {
+        private contacts: Contact[] = [];
+
+        getContactById(id: number): Contact | null {
+            console.trace(`ContactRepository.getContactById: BEGIN`);
+
+            if (!currentUser.isInRole("ContactViewer")) {
+                throw Error("User not authorized to execute this action");
+            }
+
+            const contact = this.contacts.find(x => x.id === id);
+
+            console.debug(`ContactRepository.getContactById: END`);
+
+            return contact;
+        }
+
+        save(contact: Contact): void {
+            console.trace(`ContactRepository.save: BEGIN`);
+
+            if (!currentUser.isInRole("ContactEditor")) {
+                throw Error("User not authorized to execute this action");
+            }
+
+            const existing = this.getContactById(contact.id);
+
+            if (existing) {
+                Object.assign(existing, contact);
+            } else {
+                this.contacts.push(contact);
+            }
+
+            console.debug(`ContactRepository.save: END`);
+        }
+    }
+
+//we can replace the logging statement to track the start and begin of every function
+  and to grant role based access using 
+
+    @log
+    class ContactRepository {
+        private contacts: Contact[] = [];
+
+        @authorize("ContactViewer")
+        getContactById(id: number): Contact | null {
+            const contact = this.contacts.find(x => x.id === id);
+
+            return contact;
+        }
+
+        @authorize("ContactEditor")
+        save(contact: Contact): void {
+            const existing = this.getContactById(contact.id);
+
+            if (existing) {
+                Object.assign(existing, contact);
+            } else {
+                this.contacts.push(contact);
+            }
+        }
+    }
+
+
+: to use declerator metadata or pollyfills feature do the following :
+  1. set "emitDecoratorMetadata": true in compilerOptions
+  2. Download npm i reflect-metadata --save
+
+ // this is also a proposed feature which ts can access early
+    as compared to js
+
+Part 2 : Actually writing the decorator function
+
+:   //syntax of the function decorator
+    function authorize(target: any, property: string, descriptor: PropertyDescriptor) {
+        const wrapped = descriptor.value //storing the previous function's value
+        descriptor.value = function () { //defining a new custom descriptor
+            if (!currentUser.isAuthenticated()) {
+                throw Error("User is not authenticated");
+            }
+
+            return wrapped.apply(this, arguments); //calling the old function from within
+        }
+    } 
+
+    //the descriptor is an object of type PropertyDescriptor whose value property holds
+      the function above which the decorator was called.
+      we are going to simply write a custom function and then call the previous function
+      within our new function
+
+Part 3 - Decorator factory
+
+: Note that in the decorator function we cannnot pass our own params , then how will we
+  pass the role like this authorize("ContactViewer") ? 
+  Answer is using a decorator factory.
+
+:   function authorize(role: string) { //decorator factory
+        return function authorizeDecorator(target: any, property: string, descriptor: PropertyDescriptor) {
+            const wrapped = descriptor.value
+
+            descriptor.value = function () {
+                if (!currentUser.isAuthenticated()) {
+                    throw Error("User is not authenticated");
+                }
+                if (!currentUser.isInRole(role)) {
+                    throw Error(`User not in role ${role}`);
+                }
+
+                return wrapped.apply(this, arguments);
+            }
+        }
+    }
+
+    //Here the decorator factory provides the necessary params to 
+      decorator for better customization of the function logic and
+      finally returns the decorator
+
+Part 4 : Class Decorator
+
+:  function freeze(constructor: Function) {
+        Object.freeze(constructor)
+        Object.freeze(constructor.prototype)
+    }
+
+   @freeze
+   class ContactRepository{
+    ...
+   }
+
+   //decorator class takes in the constructor of the class
+     as parameter and then would redefine the class properties 
+     at runtime.
+
+    //In this example we have disabled the modification of the class's
+      attribute and its function by redefining the class constructor
+
+: If we want to add properties and attributes to the class at runtime we 
+  can use the below example :
+
+    function singleton<T extends { new(...args: any[]): {} }>(constructor: T) {
+        return class Singleton extends constructor {
+            static _instance = null;
+
+            constructor(...args) {
+                super(...args);
+                if (Singleton._instance) {
+                    throw Error("Duplicate instance")
+                }
+
+                Singleton._instance = this
+            }
+        }
+    }
+
+    // the above function returns a redefined class with a new property _instance
+       which points to the first instance of the class.
+       Since we are redefining a class using a constructor, we will have to impose
+       a constraint on the constructor being accepted to be of a specific type 
+       which is implemented using generics.
+    
+    // We then redefine the constructor within the new class, by passing the args of 
+    the original class constructor which we have captured using tempelates, i.e ...args
+
+    // To mimic the behaviour of the original constructor within the new constructor
+       we call original constructor using the super() method
+    
+    //It is now that we add our own logic within the consructor to either point to the
+    first instance of this class or throw an error if an instance has already been declared
+
+Part 5 : Property Decorator
+
+: called just above the property/attribute of a class
+  used to redefine the properties
+
+: example : 
+    
+    // takes two params source object and the propertyname
+    function auditable(target: object, key: string | symbol) {
+
+        // get the initial value, before the decorator is applied
+        let val = target[key];
+
+        // then overwrite the property with a custom getter and setter
+        Object.defineProperty(target, key, {
+            get: () => val,  //if we try to fetch the value of the property, return the initial value i.e val
+            set: (newVal) => { //if new value of the property is being set then print the followin on console
+                console.log(`${key.toString()} changed: `, newVal);
+                val = newVal; // also set the new value
+            },
+            enumerable: true, //beyond the scope of this course
+            configurable: true //beyond the scope of this course
+        })
+    }
+
+****Chapter 06 
+

@@ -4,7 +4,9 @@
         "outDir" : "build",
         "noEmit": true,
         "allowJs": true,
-        "checkJs": true
+        "checkJs": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
     },
     "include" : ["src/**/*"]
 }
