@@ -88,7 +88,6 @@ function auditable(target: object, key: string | symbol) {
     })
 }
 
-
 @freeze
 @singleton
 class ContactRepository1 {

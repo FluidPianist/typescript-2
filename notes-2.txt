@@ -615,3 +615,83 @@ Part 5 : Property Decorator
 
 ****Chapter 06 
 
+Part 2 : module based application using ts
+
+: we can import multiple js source files in one index file
+  this way we can use function defined in one js file , into another
+  js file without js complaining about it. 
+
+: But this can lead to error if different files have the same function
+  name. The last file to imported in index.html will overwrite all 
+  the other function with the same name in the previously imported js
+  file
+
+: we can avoid such situation using ts, where in we have to export and
+  import functions to avoid compile time errors.
+  eg export function f1{} //in utils.js
+   in app.js import {f1} from './utils.js' //given that app.js is 
+   in the same folder as utils.js
+  This way we can run app.js independently
+
+: imports and exports is used in the modular approach of js which is 
+  the recommended method
+
+Part 3 : typescript declaration file ( *.d.ts)
+
+: Lets say you have functions scattered across different js files,
+ which you are using together by importing all of it together in the
+ index.html.
+
+: to convert such a codebase to .ts, we will write a typescript
+  defination file so that ts becomes aware of all the functions
+  which are scattered across different files. This will help 
+  typescript in situation when a function being defined in one file
+  is being used in another without any export/import
+
+: eg global.d.ts file
+  
+  declare global { //global is the namespace 
+    /** add doc about the function here */
+    function formatDate(date: Date) : string
+  }
+
+  export {}
+
+Part 4 : Declaration merging
+
+:   interface Customer {
+        save() : void
+    }
+    class Customer {}
+
+    const customer = new Customer()
+    customer.save = func() {} // this is perfectly valid
+    // because typescript has merged the props of Customer interface
+       and Customer class
+
+:   this is purticularly useful in cases when we want to add our own
+    props to preexisting library classes
+
+: Extenstions can also be made in global.d.ts
+  lets say we want to add some prop to the Dom Window Object
+
+    declare global {
+        /** this is custom global variable */
+        interface Window {
+            My_prop : string;
+        }
+    }
+    export{}
+
+Part 5 
+:   The imports and exports statements we have used in ts files
+    wll not be supported by NodeJs after their tranpilation to js. 
+    We will have to add the property "module" : "CommonJs"
+    to compilerOptions in tsconfig, to make the transpilation
+    process NodeJS friendly
+
+: The transpiled js can run in Node environment but may or may not
+  run directly on browser according to expectations.
+  Webpacks or parcel tools can help here to convert the ts to web-browser
+  friendly js
+
